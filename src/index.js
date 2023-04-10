@@ -9,6 +9,8 @@ const gallery = document.querySelector('.gallery');
 const loadMoreBtn = document.querySelector('.load-more');
 
 let query = '';
+let totalHits = null;
+
 searchForm.addEventListener('submit', onSubmit);
 loadMoreBtn.addEventListener('click', onLoadMore);
 
@@ -20,11 +22,12 @@ let lightbox = new SimpleLightbox('.photo-card a', {
 
 async function onSubmit(evt) {
   evt.preventDefault();
+  query = inputSearch.value.trim();
+
   loadMoreBtn.classList.add('is-hidden');
+
   markupReset();
   pageReset();
-
-  query = inputSearch.value.trim();
 
   if (query === '') {
     return Notify.info(
@@ -32,19 +35,31 @@ async function onSubmit(evt) {
     );
   }
   const pictures = await picturesFetch(query);
+  totalHits = pictures.totalHits;
+
+  if (totalHits === 0) {
+    return Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  }
+
+  Notify.info(`Hooray! We found ${totalHits} images.`);
 
   pictureMarkup(pictures);
+  lightbox.refresh();
 
   loadMoreBtn.classList.remove('is-hidden');
 }
 
 async function onLoadMore() {
   const newPictures = await picturesFetch(query);
+  totalHits = newPictures.hits.length;
 
-  const totalHits = newPictures.hits.length;
   pictureMarkup(newPictures);
+  lightbox.refresh();
+  smoothScrol();
 
-  if (totalHits < 40) {
+  if (totalHits < 8) {
     loadMoreBtn.classList.add('is-hidden');
     return Notify.warning(
       "We're sorry, but you've reached the end of search results."
@@ -91,4 +106,15 @@ function pictureMarkup(pictures) {
 
 function markupReset() {
   gallery.innerHTML = '';
+}
+
+function smoothScrol() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2.5,
+    behavior: 'smooth',
+  });
 }

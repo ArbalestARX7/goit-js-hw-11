@@ -14,7 +14,7 @@ export async function picturesFetch(query) {
   });
 
   const response = await axios.get(
-    `${BASE_URL}?${params}&per_page=40&page=${page}`
+    `${BASE_URL}?${params}&per_page=8&page=${page}`
   );
 
   console.log(page);
